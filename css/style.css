@@ -1,0 +1,579 @@
+/* =============================================
+   疏影拾知 · 清雅书卷风 + 深浅主题 CSS 变量
+   ============================================= */
+
+/* ========== 主题 CSS 变量（默认浅色） ========== */
+html[data-theme="light"] {
+  --c-ink:    #3d3835;
+  --c-mist:   #6b6460;
+  --c-rice:   #f7f4ef;
+  --c-paper:  #fbf9f5;
+  --c-sage:   #8fa68e;
+  --c-sageDark: #6f8a6e;
+  --c-crimson:#a85c5c;
+  --c-ochre:  #c08a5a;
+  --c-indigo: #6b7fa0;
+  --c-border: #e8e2d8;
+  --c-borderDark: #d4cdc0;
+  --c-cardShadow: rgba(61, 56, 53, 0.08);
+  --c-hover:  #f0ece3;
+  --c-cardBg: #fbf9f5;
+  --c-inputBg:#f7f4ef;
+}
+
+html[data-theme="dark"] {
+  --c-ink:    #e8e4df;
+  --c-mist:   #9a938d;
+  --c-rice:   #1a1918;
+  --c-paper:  #23221f;
+  --c-sage:   #7b947a;
+  --c-sageDark: #5f755e;
+  --c-crimson:#c27272;
+  --c-ochre:  #c89870;
+  --c-indigo: #8a9bc0;
+  --c-border: #3a3734;
+  --c-borderDark: #4a4642;
+  --c-cardShadow: rgba(0, 0, 0, 0.35);
+  --c-hover:  #2d2a27;
+  --c-cardBg: #282623;
+  --c-inputBg:#22211f;
+}
+
+/* ========== 全局 ========== */
+html { height: 100%; }
+body {
+  height: 100vh;
+  height: 100dvh; /* 适配移动端/小窗浏览器工具栏，避免底部内容被遮挡 */
+  /* 页面本身不滚动，滚动交给三栏各自的内部区域，保证各栏固定在视口内 */
+  overflow: hidden;
+  background-color: var(--c-rice);
+}
+body.dark {
+  background-color: var(--c-rice);
+  color: var(--c-ink);
+}
+
+/* 不支持 dvh 的旧浏览器回退到 vh */
+@supports not (height: 100dvh) {
+  body { height: 100vh; }
+  main { height: calc(100vh - 3.5rem) !important; }
+}
+
+/* 统一滚动条：细窄、圆角、书卷色（兼容 WebKit 与 Firefox） */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-borderDark) transparent;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--c-sage) 40%, var(--c-borderDark));
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-sage);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+::-webkit-scrollbar-corner { background: transparent; }
+
+::selection { background: var(--c-sage); color: #fff; }
+
+/* ========== 顶部栏按钮 ========== */
+.header-btn {
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px; color: var(--c-mist);
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+  background: transparent;
+}
+.header-btn:hover {
+  background: var(--c-hover);
+  color: var(--c-sage);
+  border-color: var(--c-border);
+}
+
+/* ========== 分类列表 ========== */
+.cat-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 6px;
+  cursor: pointer; transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+.cat-item:hover { background: var(--c-hover); }
+.cat-item.active {
+  background: color-mix(in srgb, var(--c-sage) 15%, transparent);
+  border-color: color-mix(in srgb, var(--c-sage) 35%, transparent);
+  color: var(--c-sageDark);
+  font-weight: 500;
+}
+.cat-item .cat-count {
+  margin-left: auto; font-size: 11px;
+  background: var(--c-border); color: var(--c-mist);
+  padding: 1px 7px; border-radius: 10px;
+}
+.cat-item.active .cat-count {
+  background: var(--c-sage); color: #fff;
+}
+.cat-item .cat-actions {
+  display: none; gap: 2px; margin-left: auto;
+}
+.cat-item:hover .cat-actions { display: flex; }
+.cat-item:hover .cat-count { display: none; }
+.cat-item .cat-actions button {
+  font-size: 11px; padding: 2px 5px; border-radius: 3px;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--c-mist); transition: all 0.2s;
+}
+.cat-item .cat-actions button:hover {
+  background: var(--c-hover); color: var(--c-sage);
+}
+.cat-item .cat-actions button.danger:hover { color: var(--c-crimson); }
+
+/* ========== 录入 Tab ========== */
+.input-tab { cursor: pointer; user-select: none; }
+.input-panel { animation: fadeIn 0.25s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== 知识卡片 ========== */
+.card {
+  background: var(--c-cardBg);
+  border: 1px solid var(--c-border);
+  border-radius: 10px; padding: 16px;
+  transition: all 0.25s ease;
+  position: relative; overflow: hidden;
+  cursor: pointer; /* 点击卡片打开详情 */
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--c-sage); opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 16px var(--c-cardShadow);
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--c-sage) 40%, var(--c-border));
+}
+.card:hover::before { opacity: 1; }
+
+.card .card-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.card .card-title {
+  font-weight: 600; color: var(--c-ink); font-size: 14px; flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.card .card-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: var(--c-hover); color: var(--c-mist);
+  flex-shrink: 0;
+}
+.card .card-tag.source-video { background: color-mix(in srgb, #8fa68e 20%, transparent); color: var(--c-sageDark); }
+.card .card-tag.source-audio { background: color-mix(in srgb, #c08a5a 20%, transparent); color: #a06a40; }
+.card .card-tag.source-text  { background: color-mix(in srgb, #6b7fa0 20%, transparent); color: #556a8f; }
+
+.card .card-tags {
+  display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0;
+}
+.card .card-tags span {
+  font-size: 10px; padding: 1px 7px; border-radius: 8px;
+  background: var(--c-hover); color: var(--c-mist);
+  border: 1px solid var(--c-border);
+}
+
+.card .card-summary {
+  font-size: 12px; color: var(--c-mist); line-height: 1.6;
+  padding: 6px 8px; background: color-mix(in srgb, var(--c-sage) 8%, transparent);
+  border-radius: 6px; margin-bottom: 8px;
+}
+
+.card .card-content {
+  font-size: 13px; color: var(--c-mist); line-height: 1.7;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card .card-content.video-link {
+  -webkit-line-clamp: 2; color: var(--c-indigo); word-break: break-all;
+}
+.card .card-content.audio-info { color: var(--c-ochre); }
+
+.card .card-footer {
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px dashed var(--c-border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--c-mist); gap: 4px; flex-wrap: wrap;
+}
+.card .card-footer .card-actions { display: flex; gap: 4px; }
+.card .card-footer button {
+  color: var(--c-mist); transition: color 0.2s;
+  background: none; border: none; cursor: pointer; padding: 2px 5px; border-radius: 3px;
+}
+.card .card-footer button:hover { background: var(--c-hover); color: var(--c-sage); }
+.card .card-footer button.danger:hover { color: var(--c-crimson); }
+.card .card-footer button.search:hover { color: var(--c-indigo); }
+
+/* 到期标记 */
+.card.due-soon { border-color: color-mix(in srgb, var(--c-crimson) 40%, transparent); }
+.card.due-soon::before { background: var(--c-crimson); opacity: 1; }
+
+/* ========== 复习提醒 ========== */
+.review-item {
+  padding: 8px 10px; background: var(--c-cardBg);
+  border: 1px solid var(--c-border); border-radius: 6px;
+  cursor: pointer; transition: all 0.2s;
+}
+.review-item:hover {
+  border-color: color-mix(in srgb, var(--c-sage) 40%, transparent);
+  background: color-mix(in srgb, var(--c-sage) 6%, var(--c-cardBg));
+}
+.review-item.due-today {
+  border-color: color-mix(in srgb, var(--c-crimson) 50%, transparent);
+  background: color-mix(in srgb, var(--c-crimson) 8%, var(--c-cardBg));
+}
+.review-item.due-today .review-title { color: var(--c-crimson); }
+.review-item .review-title {
+  font-size: 13px; font-weight: 500; color: var(--c-ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.review-item .review-meta {
+  font-size: 11px; color: var(--c-mist); margin-top: 4px;
+  display: flex; justify-content: space-between;
+}
+
+/* ========== 图表容器 ========== */
+.chart-box {
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-cardBg);
+  padding: 4px;
+  /* 图表尺寸完全跟随容器，避免 canvas 大于卡片导致内容被截断/溢出相邻卡片 */
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ========== 三栏独立滚动 ========== */
+
+/* 左侧：分类列表独立滚动，标题与底部统计固定 */
+#sidebar { min-width: 200px; min-height: 0; }
+.sidebar-scroll,
+.sidebar-scroll #categoryList { min-width: 0; }
+.sidebar-scroll { scrollbar-gutter: stable; }
+
+/* 分类名完整显示：不换行、不加省略号，图标 / 文字 / 数字标签整齐排布 */
+#categoryList .cat-item { min-width: 0; }
+#categoryList .cat-name {
+  flex: 1 1 auto; min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+#categoryList .cat-count,
+#categoryList .cat-actions { flex-shrink: 0; }
+
+/* 中间：录入面板固定在顶部（内容过高时自身可滚动），卡片区独立滚动 */
+#mainPanel { height: 100%; min-height: 0; }
+#entryPanel { flex-shrink: 0; max-height: calc(100% - 160px); overflow-y: auto; }
+#cardListArea { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
+
+/* 右侧：整列独立滚动（待复习 + 数据看板同属一列） */
+#rightPanel {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+/* 看板区随整列滚动，图表在空间充足时拉伸、不足时保持 150px 并交给整列滚动 */
+#dashboardPanel { flex: 1 0 auto; }
+#dashboardPanel > div:last-child { flex: 1 1 auto; min-height: 0; }
+#chartPie, #chartHeat, #chartTrend { flex: 1 1 0; min-height: 150px; }
+
+/* ========== 模态框 ========== */
+#modal.active, #confirmModal.active, #editModal.active {
+  display: flex; animation: fadeIn 0.18s ease;
+}
+
+/* ========== 知识点详情弹窗 ========== */
+#detailModal.active {
+  display: flex; animation: fadeIn 0.18s ease;
+}
+.detail-dialog {
+  display: flex; flex-direction: column;
+  width: min(660px, 92vw);
+  max-height: 86vh;
+  background: var(--c-paper);
+  border-radius: 10px;
+  box-shadow: 0 18px 48px var(--c-cardShadow);
+  overflow: hidden;
+  animation: detailIn 0.24s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+@keyframes detailIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.detail-head {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--c-border);
+  flex-shrink: 0;
+}
+.detail-head-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.detail-title {
+  font-size: 16px; font-weight: 600; color: var(--c-ink);
+  line-height: 1.5; word-break: break-word;
+}
+.detail-close {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; background: transparent;
+  color: var(--c-mist); cursor: pointer; transition: all 0.2s;
+}
+.detail-close:hover {
+  background: var(--c-hover); color: var(--c-sage); border-color: var(--c-border);
+}
+.detail-body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  padding: 14px 18px; scrollbar-gutter: stable;
+}
+.detail-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  font-size: 12px; color: var(--c-mist); margin-bottom: 12px;
+}
+.detail-meta i { color: var(--c-sage); margin-right: 4px; }
+.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.detail-tags span {
+  font-size: 11px; padding: 2px 9px; border-radius: 10px;
+  background: var(--c-hover); color: var(--c-mist);
+  border: 1px solid var(--c-border);
+}
+.detail-link-wrap {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: 12px; margin-bottom: 12px; word-break: break-all;
+}
+.detail-link-wrap i { color: var(--c-indigo); margin-top: 3px; }
+.detail-link-wrap a { color: var(--c-indigo); text-decoration: underline; }
+.detail-content {
+  font-size: 13px; line-height: 1.85; color: var(--c-mist);
+  white-space: pre-wrap; word-break: break-word;
+  padding: 12px 14px; border-radius: 8px;
+  background: var(--c-rice); border: 1px solid var(--c-border);
+}
+.detail-foot {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end;
+  padding: 12px 18px; flex-shrink: 0;
+  border-top: 1px solid var(--c-border); background: var(--c-paper);
+}
+.detail-foot button {
+  font-size: 12px; padding: 6px 12px; border-radius: 6px;
+  border: 1px solid var(--c-border); background: transparent;
+  color: var(--c-mist); cursor: pointer; transition: all 0.2s;
+}
+.detail-foot button:hover {
+  color: var(--c-sage); border-color: var(--c-sage); background: var(--c-hover);
+}
+.detail-foot #detailReviewBtn {
+  background: var(--c-sage); border-color: var(--c-sage); color: #fff;
+}
+.detail-foot #detailReviewBtn:hover { background: var(--c-sageDark); color: #fff; }
+.detail-foot #detailDelBtn:hover {
+  color: var(--c-crimson); border-color: var(--c-crimson); background: transparent;
+}
+
+
+/* ========== Toast ========== */
+#toast.show { opacity: 1; }
+
+/* ========== 语音录音按钮 ========== */
+.mic-record-btn.recording {
+  background: var(--c-crimson) !important;
+  border-color: var(--c-crimson) !important;
+  color: #fff !important;
+  animation: pulse-ring 1.2s ease-out infinite;
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(168, 92, 92, 0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(168, 92, 92, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(168, 92, 92, 0); }
+}
+
+/* 录音状态指示灯（小红点） */
+.rec-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--c-crimson);
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+/* 录音波形指示（5 根竖条） */
+.rec-indicator {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+}
+.rec-indicator.hidden { display: none; }
+.rec-indicator span {
+  width: 3px;
+  background: var(--c-crimson);
+  border-radius: 2px;
+  opacity: 0.6;
+  height: 4px;
+}
+.rec-indicator.pulse span:nth-child(1) { animation: wave 0.9s ease-in-out infinite; animation-delay: 0s; }
+.rec-indicator.pulse span:nth-child(2) { animation: wave 0.9s ease-in-out infinite; animation-delay: 0.15s; }
+.rec-indicator.pulse span:nth-child(3) { animation: wave 0.9s ease-in-out infinite; animation-delay: 0.3s; }
+.rec-indicator.pulse span:nth-child(4) { animation: wave 0.9s ease-in-out infinite; animation-delay: 0.45s; }
+.rec-indicator.pulse span:nth-child(5) { animation: wave 0.9s ease-in-out infinite; animation-delay: 0.6s; }
+@keyframes wave {
+  0%, 100% { height: 4px; }
+  50%      { height: 16px; }
+}
+
+/* ========== 加载动画（旋转） ========== */
+@keyframes fa-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ========== 响应式 ========== */
+
+/* ---- 全局防溢出：任何宽度都不出现横向滚动条 ---- */
+html, body { max-width: 100%; overflow-x: hidden; }
+#mainPanel { min-width: 0; }
+/* ---- 小窗抽屉入口（≥900px 时隐藏） ---- */
+.right-panel-toggle {
+  display: none;
+  position: fixed; top: 4.25rem; right: 12px; z-index: 43;
+  width: 42px; height: 42px; border-radius: 50%;
+  align-items: center; justify-content: center;
+  background: var(--c-sage); color: #fff; border: none; cursor: pointer;
+  box-shadow: 0 4px 14px var(--c-cardShadow);
+  transition: background 0.2s, transform 0.2s;
+}
+.right-panel-toggle:hover { background: var(--c-sageDark); transform: translateY(-1px); }
+.right-panel-backdrop { display: none; }
+
+/* 抽屉模式头部：仅小窗可见 */
+.drawer-only {
+  display: none;
+  align-items: center; justify-content: space-between;
+  padding: 8px 12px; flex-shrink: 0;
+  border-bottom: 1px solid var(--c-border);
+  font-weight: 600; color: var(--c-ink);
+}
+
+/* ---- ≥1200px：保持原有三栏布局，不施加任何缩放 ---- */
+
+/* ---- 900px ≤ 宽度 < 1200px：三栏按比例收紧，仍同屏 ---- */
+@media (min-width: 900px) and (max-width: 1199.98px) {
+  html { font-size: 15px; }
+
+  /* 保证「短视频通识知识」等 7 字内置分类完整显示 */
+  #sidebar   { width: 212px; }
+  #rightPanel { width: 240px; }
+  .cat-item { padding-left: 10px; padding-right: 10px; }
+
+  header { padding-left: 16px; padding-right: 16px; }
+
+  #entryPanel     { padding: 14px; }
+  #cardListArea   { padding: 14px; }
+  #reviewPanel    { padding: 12px; }
+  #dashboardPanel { padding: 12px; gap: 10px; }
+
+  /* 卡片自适应可用宽度 */
+  #cardGrid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+  .card { padding: 13px; }
+  .review-item { padding: 7px 9px; }
+  #searchInput { max-width: 100%; }
+}
+
+/* ---- 宽度 < 900px：右侧看板折叠为抽屉，主区单列 ---- */
+@media (max-width: 899.98px) {
+  html { font-size: 15px; }
+
+  header { padding-left: 12px; padding-right: 12px; }
+  /* 小窗同样保证分类名完整可读，优先于压缩侧栏 */
+  #sidebar { width: clamp(210px, 26vw, 212px); }
+  .cat-item { padding-left: 10px; padding-right: 10px; }
+
+  /* 右侧看板 → 右侧抽屉 */
+  #rightPanel {
+    position: fixed;
+    top: 3.5rem; right: 0; bottom: 0;
+    width: min(86vw, 320px);
+    z-index: 45;
+    transform: translateX(105%);
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
+    pointer-events: none;
+    visibility: hidden;
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.16);
+  }
+  #rightPanel.drawer-open {
+    transform: translateX(0);
+    pointer-events: auto;
+    visibility: visible;
+    transition: transform 0.25s ease;
+  }
+
+  .right-panel-toggle { display: inline-flex; }
+  .right-panel-backdrop {
+    display: none;
+    position: fixed; inset: 3.5rem 0 0 0;
+    background: rgba(30, 27, 25, 0.35);
+    z-index: 44;
+  }
+  .right-panel-backdrop.show { display: block; }
+  .drawer-only { display: flex; }
+  /* 抽屉头部已展示「数据看板」，隐藏看板区内的重复标题 */
+  #dashboardPanel > h2 { display: none; }
+
+  /* 知识点卡片单列 */
+  #cardGrid { grid-template-columns: 1fr; gap: 12px; }
+
+  #entryPanel     { padding: 12px; }
+  /* 右上角悬浮按钮占位，避免遮挡「录入新知」标题行 */
+  #entryPanel > div:first-child { flex-wrap: wrap; padding-right: 52px; }
+  #cardListArea   { padding: 12px; }
+  #reviewPanel    { padding: 12px; }
+  #dashboardPanel { padding: 12px; }
+
+  /* 输入框 / 下拉框 / 上传区撑满可用宽度，禁止溢出 */
+  #videoUrl, #videoSubtitle,
+  #videoManualTitle, #videoManualContent, #videoManualTags,
+  #speechTranscript, #textTitle, #textCategory, #textContent {
+    width: 100%; min-width: 0;
+  }
+  #audioUploadLabel { min-width: 0 !important; flex: 1 1 100%; }
+
+  /* 主要操作按钮撑满 */
+  #saveVideoBtn, #saveVideoManualBtn, #saveAudioBtn, #saveTextBtn { width: 100%; }
+
+  /* Tab 可换行，不挤压 */
+  #inputTabs { flex-wrap: wrap; }
+  #inputTabs .input-tab { flex: 1 1 auto; text-align: center; }
+
+  /* 录音 / 手动录入的横排控件允许换行 */
+  #input-audio .flex,
+  #input-text > .flex,
+  #cardListArea > div:first-child > .flex { flex-wrap: wrap; }
+
+  /* 卡片列表工具栏：排序 / 搜索占满整行 */
+  #cardListArea > div:first-child > .flex { flex: 1 1 100%; }
+
+  /* 卡片列表工具栏自适应 */
+  #sortSelect { flex: 1 1 110px; }
+  #searchInput { flex: 1 1 160px; width: auto; max-width: 100%; }
+}
+

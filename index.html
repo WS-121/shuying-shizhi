@@ -1,0 +1,433 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>疏影拾知 · 碎片化知识防遗忘归档系统</title>
+
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- ECharts 5（本地） -->
+<script src="js/vendor/echarts.min.js"></script>
+
+<!-- Font Awesome 6 -->
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<!-- 自定义样式 -->
+<link rel="stylesheet" href="css/style.css?v=20261123b" />
+
+<!-- Tailwind 自定义扩展 -->
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink:    'var(--c-ink)',
+          mist:   'var(--c-mist)',
+          rice:   'var(--c-rice)',
+          paper:  'var(--c-paper)',
+          sage:   'var(--c-sage)',
+          sageDark:'var(--c-sageDark)',
+          crimson:'var(--c-crimson)',
+          ochre:  'var(--c-ochre)',
+          indigo: 'var(--c-indigo)',
+          border: 'var(--c-border)',
+          borderDark:'var(--c-borderDark)',
+        },
+        fontFamily: {
+          song: ['"Noto Serif SC"', '"Source Han Serif SC"', 'SimSun', 'serif'],
+          kai:  ['"KaiTi"', '"STKaiti"', 'serif'],
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap');
+</style>
+</head>
+
+<body class="bg-rice text-ink font-song transition-colors duration-300">
+
+<!-- ========== 顶部栏 ========== -->
+<header class="h-14 border-b border-border bg-paper flex items-center px-6 shadow-sm flex-shrink-0">
+  <div class="flex items-center gap-3">
+    <i class="fa-solid fa-feather-pointed text-sage text-xl"></i>
+    <h1 class="text-lg font-semibold tracking-wider">疏影拾知</h1>
+    <span class="text-mist text-xs ml-2 hidden md:inline">· 碎片化知识防遗忘归档系统</span>
+  </div>
+  <div class="ml-auto flex items-center gap-3 text-sm text-mist">
+    <span id="todayDate" class="hidden sm:inline"></span>
+    <span class="w-px h-4 bg-border hidden sm:block"></span>
+
+    <!-- 拓展检索（默认百度） -->
+    <button id="themeToggleBtn" class="header-btn" title="切换深浅主题">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <!-- 导出 -->
+    <button id="exportBtn" class="header-btn" title="导出全部数据为 JSON">
+      <i class="fa-solid fa-file-export"></i>
+    </button>
+
+    <!-- 导入 -->
+    <button id="importBtn" class="header-btn" title="导入 JSON 备份文件">
+      <i class="fa-solid fa-file-import"></i>
+    </button>
+    <input id="importFile" type="file" accept=".json,application/json" class="hidden" />
+  </div>
+</header>
+
+<!-- ========== 三栏主布局 ========== -->
+<main class="flex h-[calc(100dvh-3.5rem)]">
+
+  <!-- 左侧：分类导航 -->
+  <aside id="sidebar" class="w-56 border-r border-border bg-paper flex-shrink-0 flex flex-col overflow-hidden">
+    <div class="p-4 pb-2 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold text-ink flex items-center gap-2">
+          <i class="fa-solid fa-book-open text-sage text-sm"></i>知识分类
+        </h2>
+        <button id="addCategoryBtn" class="text-xs text-sage hover:text-sageDark transition-colors" title="新增自定义分类">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 分类列表：独立滚动 -->
+    <div class="sidebar-scroll flex-1 min-h-0 overflow-y-auto px-4 pb-3 border-b border-border">
+      <ul id="categoryList" class="space-y-1 text-sm">
+        <!-- JS 渲染 -->
+      </ul>
+    </div>
+
+    <div class="p-4 text-xs text-mist space-y-2 flex-shrink-0">
+      <div class="flex justify-between"><span>当前分类</span><span id="statCat">—</span></div>
+      <div class="flex justify-between"><span>总知识点</span><span id="statTotal">0</span></div>
+      <div class="flex justify-between"><span>待复习</span><span id="statDue" class="text-crimson">0</span></div>
+      <div class="flex justify-between"><span>已复习</span><span id="statReviewed">0</span></div>
+    </div>
+  </aside>
+
+  <!-- 中间：录入 + 卡片列表 -->
+  <section id="mainPanel" class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- 录入面板 -->
+    <div id="entryPanel" class="p-5 border-b border-border bg-paper flex-shrink-0">
+      <div class="flex items-center gap-2 mb-4">
+        <h2 class="font-semibold text-ink"><i class="fa-solid fa-pen-nib text-sage mr-2"></i>录入新知</h2>
+        <span class="text-xs text-mist">— 三栏入口任选其一</span>
+      </div>
+
+      <!-- Tab 切换 -->
+      <div id="inputTabs" class="flex gap-2 mb-4">
+        <button class="input-tab active px-4 py-1.5 rounded-md text-sm border border-sage bg-sage/10 text-sageDark transition-all" data-tab="video">
+          <i class="fa-brands fa-youtube mr-1"></i>短视频链接
+        </button>
+        <button class="input-tab px-4 py-1.5 rounded-md text-sm border border-border text-mist hover:border-sage hover:text-sage transition-all" data-tab="audio">
+          <i class="fa-solid fa-microphone mr-1"></i>课堂录音
+        </button>
+        <button class="input-tab px-4 py-1.5 rounded-md text-sm border border-border text-mist hover:border-sage hover:text-sage transition-all" data-tab="text">
+          <i class="fa-solid fa-pen mr-1"></i>手动录入
+        </button>
+      </div>
+
+      <!-- 短视频录入（真实 API 解析 + 手动兜底） -->
+      <div id="input-video" class="input-panel">
+        <div class="flex gap-3 flex-wrap">
+          <input id="videoUrl" type="url" placeholder="粘贴短视频链接（B站 / YouTube / 抖音 / 小红书 等）"
+            class="flex-1 min-w-[280px] px-3 py-2 rounded-md border border-border focus:border-sage focus:outline-none text-sm bg-rice" />
+          <button id="saveVideoBtn" class="px-4 py-2 bg-sage hover:bg-sageDark text-white rounded-md text-sm transition-colors whitespace-nowrap">
+            <i class="fa-solid fa-magic mr-1"></i>解析并归档
+          </button>
+        </div>
+        <!-- 字幕文稿粘贴区（知识点正文的唯一来源） -->
+        <div id="videoSubtitleBox" class="mt-3 space-y-1">
+          <div class="text-xs text-mist flex items-center gap-1">
+            <i class="fa-solid fa-closed-captioning text-sage"></i>
+            <span id="videoSubtitleHint">粘贴视频字幕文稿（推荐）：系统将调用大模型萃取知识点、剔除广告引流话术</span>
+          </div>
+          <textarea id="videoSubtitle" rows="4" placeholder="可选：在此粘贴视频字幕 / 文稿全文（推荐，速度最快）。留空则自动提取音轨转写；若音轨无法获取，会提示你粘贴字幕"
+            class="w-full px-3 py-2 rounded-md border border-border focus:border-sage focus:outline-none text-sm bg-white resize-none"></textarea>
+        </div>
+        <div class="text-xs text-mist mt-2">
+          <i class="fa-solid fa-info-circle mr-1"></i>
+          粘贴链接后自动获取标题 / 标签并归入 <span class="text-sage">短视频通识知识</span>；有字幕走大模型萃取，无字幕自动提取音轨转写（需本地代理运行）
+          · <label class="underline cursor-pointer text-indigo hover:opacity-80 ml-1 inline-flex items-center gap-1">
+              <input type="checkbox" id="videoManualToggle" class="hidden" />
+              <i class="fa-solid fa-pen-to-square"></i>手动填写要点（API 失败时自动展开）
+            </label>
+        </div>
+
+        <!-- 手动兜底输入区（折叠） -->
+        <div id="videoManualFallback" class="hidden mt-3 p-3 border border-dashed border-border rounded-md bg-rice space-y-2">
+          <div class="text-xs text-crimson flex items-center gap-1 mb-1">
+            <i class="fa-solid fa-triangle-exclamation"></i>解析接口不可用，请手动填写视频要点
+          </div>
+          <input id="videoManualTitle" type="text" placeholder="标题（可选）"
+            class="w-full px-3 py-1.5 rounded-md border border-border focus:border-sage focus:outline-none text-sm bg-white" />
+          <textarea id="videoManualContent" rows="2" placeholder="视频核心要点 / 视频描述"
+            class="w-full px-3 py-1.5 rounded-md border border-border focus:border-sage focus:outline-none text-sm bg-white resize-none"></textarea>
+          <input id="videoManualTags" type="text" placeholder="标签（逗号分隔，可选）"
+            class="w-full px-3 py-1.5 rounded-md border border-border focus:border-sage focus:outline-none text-sm bg-white" />
+          <button id="saveVideoManualBtn" class="px-3 py-1.5 bg-sage hover:bg-sageDark text-white rounded-md text-xs transition-colors">
+            <i class="fa-solid fa-floppy-disk mr-1"></i>用手动内容归档
+          </button>
+        </div>
+      </div>
+
+      <!-- 音频录入（Web Speech API 实时转写 + 文件上传兜底） -->
+      <div id="input-audio" class="input-panel hidden">
+        <!-- 能力检测提示 -->
+        <div id="speechSupportBadge" class="text-xs text-mist mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-circle-info"></i><span>正在检测浏览器语音能力…</span>
+        </div>
+
+        <!-- 方式一：实时语音转写 -->
+        <div class="mb-3">
+          <div class="text-xs text-mist mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-microphone-lines text-sage"></i>方式 A · 实时录音转写（浏览器原生 Web Speech API）
+          </div>
+          <div class="flex gap-2 items-center">
+            <button id="micRecordBtn" class="mic-record-btn px-4 py-2 rounded-md text-sm transition-all border border-sage bg-sage/10 text-sageDark hover:bg-sage hover:text-white">
+              <i class="fa-solid fa-microphone"></i> 开始录音
+            </button>
+            <span id="speechState" class="hidden text-xs text-crimson flex items-center gap-1">
+              <span class="rec-dot"></span>正在聆听…
+            </span>
+            <div id="recordingIndicator" class="rec-indicator hidden">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <textarea id="speechTranscript" rows="3" placeholder="点击「开始录音」后在此区域实时显示转写文本…（建议 Chrome / Edge）"
+            class="w-full mt-2 px-3 py-2 rounded-md border border-border focus:border-sage focus:outline-none text-sm bg-rice resize-none"></textarea>
+        </div>
+
+        <!-- 分割线 -->
+        <div class="flex items-center gap-2 my-2 text-xs text-mist">
+          <div class="flex-1 h-px bg-border"></div>
+          <span>或</span>
+          <div class="flex-1 h-px bg-border"></div>
+        </div>
+
+        <!-- 方式二：上传音频文件（兜底） -->
+        <div>
+          <div class="text-xs text-mist mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up text-ochre"></i>方式 B · 上传本地音频文件（<span class="text-sage">Whisper 本地 AI 转写</span>，需启动代理；未装则降级归档）
+          </div>
+          <div class="flex gap-3 items-center flex-wrap">
+            <label id="audioUploadLabel" class="flex-1 min-w-[260px] flex items-center justify-center gap-2 px-4 py-3 rounded-md border-2 border-dashed border-border hover:border-sage cursor-pointer text-sm text-mist hover:text-sage transition-colors bg-rice">
+              <i class="fa-solid fa-file-audio text-lg"></i>
+              <span id="audioLabel">点击上传课堂音频（.mp3 / .wav / .m4a），选中后自动转写</span>
+              <input id="audioFile" type="file" accept="audio/*" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-3 flex justify-end">
+          <button id="saveAudioBtn" class="px-4 py-2 bg-sage hover:bg-sageDark text-white rounded-md text-sm transition-colors whitespace-nowrap">
+            <i class="fa-solid fa-floppy-disk mr-1"></i>保存归档
+          </button>
+        </div>
+        <div class="text-xs text-mist mt-1 text-right">
+          <i class="fa-solid fa-info-circle mr-1"></i>优先保存语音转写文本；无转写文本时则保存文件上传记录
+        </div>
+      </div>
+
+      <!-- 手动录入（可选分类） -->
+      <div id="input-text" class="input-panel hidden">
+        <div class="flex gap-2 mb-2">
+          <input id="textTitle" type="text" placeholder="知识点标题"
+            class="flex-1 px-3 py-2 rounded-md border border-border focus:border-sage focus:outline-none text-sm bg-rice" />
+          <select id="textCategory" class="px-3 py-2 rounded-md border border-border text-sm bg-rice focus:border-sage focus:outline-none"></select>
+        </div>
+        <textarea id="textContent" rows="3" placeholder="随手记下的课堂笔记、灵感、金句……（将自动清洗口语冗余 + 提取关键词）"
+          class="w-full px-3 py-2 rounded-md border border-border focus:border-sage focus:outline-none text-sm bg-rice resize-none"></textarea>
+        <div class="flex justify-end mt-2">
+          <button id="saveTextBtn" class="px-4 py-2 bg-sage hover:bg-sageDark text-white rounded-md text-sm transition-colors">
+            <i class="fa-solid fa-floppy-disk mr-1"></i>保存归档
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 知识卡片列表 -->
+    <div class="flex-1 overflow-y-auto p-5" id="cardListArea">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h2 class="font-semibold text-ink">
+          <i class="fa-solid fa-scroll text-sage mr-2"></i>
+          <span id="currentCatName">全部知识点</span>
+          <span class="text-mist text-sm font-normal ml-2">(<span id="cardCount">0</span>)</span>
+        </h2>
+        <div class="flex gap-2 text-xs">
+          <select id="sortSelect" class="px-2 py-1 border border-border rounded bg-paper">
+            <option value="createdAt">按录入时间</option>
+            <option value="reviewDate">按复习时间</option>
+            <option value="title">按标题</option>
+          </select>
+          <input id="searchInput" type="text" placeholder="🔍 搜索 标题/正文/标签" class="px-2 py-1 border border-border rounded bg-paper w-48" />
+        </div>
+      </div>
+      <div id="cardGrid" class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+        <!-- JS 渲染卡片 -->
+      </div>
+      <div id="emptyHint" class="hidden text-center py-16 text-mist">
+        <i class="fa-solid fa-book-open text-4xl mb-3 opacity-30"></i>
+        <p>此分类下暂无知识点</p>
+        <p class="text-xs mt-1">快去上方录入面板添加吧～</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右侧：复习提醒 + 图表看板 -->
+  <aside id="rightPanel" class="w-80 border-l border-border bg-paper flex-shrink-0 flex flex-col overflow-hidden">
+
+    <!-- 抽屉模式头部（小窗时显示） -->
+    <div class="drawer-only">
+      <span class="flex items-center gap-2"><i class="fa-solid fa-chart-column text-indigo"></i>数据看板</span>
+      <button id="rightPanelClose" class="header-btn" title="关闭数据看板">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- 艾宾浩斯复习提醒 -->
+    <div id="reviewPanel" class="p-4 border-b border-border flex-shrink-0">
+      <h2 class="font-semibold text-ink flex items-center gap-2 mb-3">
+        <i class="fa-solid fa-bell text-crimson"></i>待复习提醒
+        <span id="dueCount" class="ml-auto text-xs bg-crimson text-white px-2 py-0.5 rounded-full">0</span>
+      </h2>
+      <ul id="reviewList" class="space-y-2 text-sm">
+        <!-- JS 渲染 -->
+      </ul>
+    </div>
+
+    <!-- 图表区域（三图表） -->
+    <div id="dashboardPanel" class="flex-1 flex flex-col p-4 gap-3">
+      <h2 class="font-semibold text-ink flex items-center gap-2">
+        <i class="fa-solid fa-chart-column text-indigo"></i>数据看板
+      </h2>
+      <div class="flex flex-col gap-2">
+        <div id="chartPie"   class="chart-box min-h-[150px]"></div>
+        <div id="chartHeat"  class="chart-box min-h-[150px]"></div>
+        <div id="chartTrend" class="chart-box min-h-[150px]"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 小窗抽屉遮罩 -->
+  <div id="rightPanelBackdrop" class="right-panel-backdrop"></div>
+</main>
+
+<!-- 小窗：数据看板悬浮入口 -->
+<button id="rightPanelToggle" class="right-panel-toggle" title="查看数据看板" aria-label="查看数据看板">
+  <i class="fa-solid fa-chart-pie"></i>
+</button>
+
+<!-- ========== 通用模态框（单输入框） ========== -->
+<div id="modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-paper rounded-lg p-5 w-80 shadow-xl border border-border">
+    <h3 id="modalTitle" class="font-semibold mb-4 text-ink"></h3>
+    <input id="modalInput" type="text" placeholder="请输入"
+      class="w-full px-3 py-2 border border-border rounded focus:border-sage focus:outline-none text-sm bg-rice mb-4" />
+    <div class="flex gap-2 justify-end">
+      <button id="modalCancel" class="px-4 py-1.5 border border-border rounded text-sm hover:bg-rice transition-colors">取消</button>
+      <button id="modalConfirm" class="px-4 py-1.5 bg-sage hover:bg-sageDark text-white rounded text-sm transition-colors">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 确认模态框（无输入，仅确认） ========== -->
+<div id="confirmModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-paper rounded-lg p-5 w-96 shadow-xl border border-border">
+    <h3 id="confirmTitle" class="font-semibold mb-2 text-ink flex items-center gap-2">
+      <i class="fa-solid fa-triangle-exclamation text-crimson"></i><span></span>
+    </h3>
+    <p id="confirmBody" class="text-sm text-mist mb-5 leading-relaxed"></p>
+    <div class="flex gap-2 justify-end">
+      <button id="confirmCancel" class="px-4 py-1.5 border border-border rounded text-sm hover:bg-rice transition-colors">取消</button>
+      <button id="confirmDanger" class="px-4 py-1.5 bg-crimson hover:opacity-90 text-white rounded text-sm transition-colors hidden" data-mode="overwrite">覆盖原数据</button>
+      <button id="confirmOk" class="px-4 py-1.5 bg-sage hover:bg-sageDark text-white rounded text-sm transition-colors">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 编辑知识点模态框 ========== -->
+<div id="editModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-paper rounded-lg p-5 w-[520px] max-w-[92vw] max-h-[86vh] overflow-y-auto shadow-xl border border-border">
+    <h3 class="font-semibold mb-4 text-ink flex items-center gap-2">
+      <i class="fa-solid fa-pen-to-square text-sage"></i>编辑知识点
+    </h3>
+    <input id="editId" type="hidden" />
+    <input id="editTitle" type="text" placeholder="标题"
+      class="w-full px-3 py-2 border border-border rounded focus:border-sage focus:outline-none text-sm bg-rice mb-2" />
+    <div class="flex gap-2 mb-2">
+      <select id="editCategory" class="flex-1 px-3 py-2 border border-border rounded text-sm bg-rice focus:border-sage focus:outline-none"></select>
+      <select id="editSource" class="flex-1 px-3 py-2 border border-border rounded text-sm bg-rice focus:border-sage focus:outline-none"></select>
+    </div>
+    <textarea id="editContent" rows="4" placeholder="正文内容"
+      class="w-full px-3 py-2 border border-border rounded focus:border-sage focus:outline-none text-sm bg-rice resize-none mb-2"></textarea>
+    <input id="editTags" type="text" placeholder="标签（逗号分隔）"
+      class="w-full px-3 py-2 border border-border rounded focus:border-sage focus:outline-none text-sm bg-rice mb-4" />
+    <div class="flex gap-2 justify-end">
+      <button id="editCancel" class="px-4 py-1.5 border border-border rounded text-sm hover:bg-rice transition-colors">取消</button>
+      <button id="editConfirm" class="px-4 py-1.5 bg-sage hover:bg-sageDark text-white rounded text-sm transition-colors">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 知识点详情模态框 ========== -->
+<div id="detailModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="detail-dialog border border-border">
+    <div class="detail-head">
+      <div class="detail-head-main">
+        <span id="detailSourceTag" class="card-tag source-text"></span>
+        <h3 id="detailTitle" class="detail-title"></h3>
+      </div>
+      <button id="detailClose" class="detail-close" title="关闭" aria-label="关闭">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-meta">
+        <span><i class="fa-solid fa-folder-open"></i><span id="detailCategory">未分类</span></span>
+        <span><i class="fa-regular fa-clock"></i><span id="detailCreated">—</span></span>
+        <span><i class="fa-solid fa-arrows-rotate"></i>已复习 <span id="detailReviewCount">0</span> 次</span>
+        <span><i class="fa-regular fa-calendar-check"></i>下次 <span id="detailNextReview">—</span></span>
+      </div>
+
+      <div id="detailTagsWrap" class="detail-tags"></div>
+
+      <div id="detailLinkWrap" class="detail-link-wrap">
+        <i class="fa-solid fa-link"></i>
+        <a id="detailLink" href="#" target="_blank" rel="noopener noreferrer"></a>
+      </div>
+
+      <div id="detailContent" class="detail-content"></div>
+    </div>
+
+    <div class="detail-foot">
+      <button id="detailReviewBtn"><i class="fa-solid fa-check mr-1"></i>标记已复习</button>
+      <button id="detailEditBtn"><i class="fa-solid fa-pen-to-square mr-1"></i>编辑</button>
+      <button id="detailSearchBtn"><i class="fa-solid fa-globe mr-1"></i>拓展检索</button>
+      <button id="detailDelBtn"><i class="fa-solid fa-trash mr-1"></i>删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Toast 提示 ========== -->
+<div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-ink text-paper px-4 py-2 rounded-md text-sm shadow-lg opacity-0 transition-opacity z-50 pointer-events-none"></div>
+
+<!-- ========== 脚本加载 ========== -->
+<script src="js/config/constants.js"></script>
+<script src="js/utils/helpers.js?v=20261122c"></script>
+<script src="js/utils/preprocessor.js"></script>
+<script src="js/api/dataService.js?v=20261123a"></script>
+<script src="js/components/sidebar.js?v=20261123a"></script>
+<script src="js/components/mainPanel.js?v=20261123b"></script>
+<script src="js/components/rightPanel.js?v=20261122c"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
