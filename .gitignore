@@ -17,3 +17,6 @@ desktop.ini
 # 编辑器
 .vscode/
 .idea/
+
+# 答辩材料（本地汇报用，不纳入仓库）
+*.pptx
